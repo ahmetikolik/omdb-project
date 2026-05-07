@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OMDB Movie Search</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>🎬 Movie Search</h1>
+    <p class="subtitle">Search any movie using the OMDB API</p>
+  </header>
+
+  <main class="container">
+    <!-- API key setup (first run) -->
+    <section id="api-key-section" class="api-key-section hidden">
+      <p>Please enter your free OMDB API key (get one at <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com</a>):</p>
+      <div class="api-key-row">
+        <input type="text" id="api-key-input" placeholder="Your OMDB API key" />
+        <button id="save-key-btn">Save</button>
+      </div>
+    </section>
+
+    <!-- Search bar -->
+    <section class="search-section">
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="Type a movie name..." autocomplete="off" />
+        <button id="search-btn">Search</button>
+      </div>
+      <div class="filter-row">
+        <select id="type-filter">
+          <option value="">All types</option>
+          <option value="movie">Movie</option>
+          <option value="series">Series</option>
+          <option value="episode">Episode</option>
+        </select>
+        <input type="number" id="year-filter" placeholder="Year (optional)" min="1900" max="2100" />
+      </div>
+    </section>
+
+    <!-- Status / error messages -->
+    <p id="status-message" class="status-message"></p>
+
+    <!-- Results grid -->
+    <section id="results" class="results-grid"></section>
+
+    <!-- Detail modal -->
+    <div id="modal" class="modal hidden">
+      <div class="modal-content">
+        <button id="modal-close" class="modal-close">×</button>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>Built by Ahmet Yıldırım · Data from <a href="https://www.omdbapi.com/" target="_blank" rel="noopener">OMDB API</a></p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

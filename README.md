@@ -1,86 +1,92 @@
 # OMDB Movie Search Project
 
-## How to Set Up Your Repository
+> **Submission by Ahmet Yıldırım** — Yıldız Technical University, Computer Engineering
+> i2i Systems Summer Internship 2026 application.
 
-**WARNING**: This is a template project. Do not fork this repository.
+A single page application (SPA) that searches movies, series and episodes through the [OMDB API](https://www.omdbapi.com/).
+Built with plain HTML, CSS and JavaScript — no frameworks, no build step.
 
-Please follow the visual steps below to create and set up the project repository on your own GitHub profile.
+## 🔗 Live Demo
 
-1. Click the **"Use this template"** button at the top right of this page.
+Once deployed, the app will be live at:
+**`https://ahmetikolik.github.io/omdb-project/`**
 
-<img width="1920" height="1080" alt="Use this template example" src="https://github.com/user-attachments/assets/137c0f6c-bc6c-4584-8752-02c067051438" />
-<br><br>
+## ✨ Features
 
-2. Select **"Create a new repository"** to generate your own public repository for this task.
+- 🔎 Search any movie/series by title
+- 🎯 Filter by **type** (movie / series / episode) and **year**
+- 🎞️ Movie cards show poster, title and year
+- 📋 Click a card to see full details — genre, director, writer, actors, IMDB rating, plot
+- ⚠️ Clear error messages for "not found" and network errors
+- ♻️ Multiple searches without refreshing
+- 💾 Last search and your API key are saved to `localStorage`, so refreshing keeps your view
+- 📱 Fully responsive — works on phone, tablet, desktop
+- ⚡ Detail responses are cached in memory to avoid duplicate API calls
 
-<img width="1920" height="1080" alt="Create a new repository" src="https://github.com/user-attachments/assets/87b9032e-6e10-4679-88bb-c42a98894edf" />
-<br><br>
+## 🛠️ How to Run Locally
 
-3. Name your repository as **"omdb-project"** and click the **"Create repository"** button.
+1. Clone this repo:
+   ```bash
+   git clone https://github.com/ahmetikolik/omdb-project.git
+   cd omdb-project
+   ```
 
-<img width="1920" height="1080" alt="Create repository" src="https://github.com/user-attachments/assets/dd808d69-6ade-4903-8f77-831b643dbdff" />
-<br><br>
+2. Get a free OMDB API key from [omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx).
 
-Upload all of your solutions to `github.com/yourusername/omdb-project`.
+3. Open `index.html` in your browser. Any of these works:
+   - Double click `index.html`
+   - Or use a quick local server: `python -m http.server 8000` and open `http://localhost:8000`
 
----
+4. The app will ask for your API key on first load. Paste it in — it's stored only in your browser's localStorage.
 
-## Overview
+## 🚀 Deploy to GitHub Pages
 
-This project is designed to evaluate your coding skills in web development. You are required to build a simple web application that consumes the [OMDB API](http://www.omdbapi.com/).
+In the repository on GitHub:
+1. Settings → Pages
+2. Source: `Deploy from a branch`
+3. Branch: `main` / Folder: `/ (root)` → Save
+4. Wait ~1 minute, then visit `https://ahmetikolik.github.io/omdb-project/`
 
-* The application must be a fully responsive **Single Page Application (SPA)** and should display movie details such as **title, year, genre, director, and poster**.
-* The application must be written using **HTML, CSS, and JavaScript**.
-* If your project meets all the requirements, you may extend it with additional functionalities.
-* After development, you must deploy the project using [GitHub Pages](https://pages.github.com). **Projects that are not deployed to GitHub Pages will not be evaluated and will receive 0 points.**
+## 📁 Project Structure
 
-You must **create your own repository using this template** and upload your work there. 
-Do **not** attempt to push changes directly to this repository or any of its original branches.
+```
+omdb-project/
+├── index.html      # Main page
+├── style.css       # All styling (dark theme, responsive grid)
+├── script.js       # Search, fetch, render, modal, localStorage
+└── README.md
+```
 
----
+## 🧠 Notes & Decisions
 
-## Functional Requirements
-
-1. **Movie Search Input**
-   - Users must be able to enter a movie name and trigger a search.
-   - A search box and button are sufficient, but adding well-composed UI elements (e.g., filters similar to sahibinden.com) will earn bonus points.
-
-2. **Display Movie Details**
-   - Show at least: Title, Year, Genre, Director, and Poster image.
-   - The design is up to you.
-
-3. **Error Handling**
-   - If the movie is not found or the API returns an error, display a clear message to the user.
-   - Unhandled errors will result in point deductions.
-
-4. **Multiple Searches**
-   - Users should be able to perform multiple searches without refreshing the page.
-   - If the page is refreshed, the last search view should be retained (e.g., using LocalStorage or URL parameters).
-
-5. **Backend Proxy (Optional)**
-   - If you implement a backend, it should handle API requests and return clean JSON to the frontend.
-
----
-
-## Non-Functional Requirements
-
-1. **Performance**
-   - API calls should be efficient. Avoid unnecessary repeated requests.
-
-2. **Usability**
-   - The interface should be simple, intuitive, and user-friendly.
-   - The design is up to you.
-
-3. **Portability**
-   - The application should work across modern browsers and be responsive for different screen sizes.
-
-4. **Maintainability**
-   - Code should be modular, well-documented, and easy to extend.
+- **No build tools** — just open `index.html`. The brief said HTML/CSS/JS, so I kept it framework-free.
+- **API key in localStorage** — instead of hardcoding it (which would leak it on GitHub Pages), the user enters their own key once and it stays in their browser. Safer and reusable.
+- **Two-step UX** — search returns lightweight cards; full details only fetched when the user clicks a card. This keeps the initial render fast and saves API calls.
+- **Detail cache** — clicking the same movie twice doesn't re-hit the API; results are cached in memory for the session.
+- **Persistence on refresh** — the last search query, type filter and year filter are saved in `localStorage` and re-run when the page loads.
 
 ---
 
-## Deliverables & Submission
+## Original Project Brief (from i2i Systems)
 
-Once you have completed the project, ensure you have the following ready:
-- A **public GitHub repository** containing your project code (created via the template).
-- A **hosted version** of the project deployed on GitHub Pages.
+This project is designed to evaluate coding skills in web development. The application consumes the [OMDB API](http://www.omdbapi.com/) and must be a fully responsive Single Page Application showing movie details (title, year, genre, director, poster).
+
+### Functional Requirements
+
+1. **Movie Search Input** — users enter a name and search; bonus points for richer UI (filters).
+2. **Display Movie Details** — at least Title, Year, Genre, Director, Poster.
+3. **Error Handling** — clear messages on errors / not-found.
+4. **Multiple Searches** — work without refresh; persist last search across refreshes.
+5. **Backend Proxy** *(optional)* — handle API requests on a backend.
+
+### Non-Functional Requirements
+
+- **Performance** — efficient API calls, no needless repeats.
+- **Usability** — simple, intuitive UI.
+- **Portability** — works on modern browsers, responsive across screen sizes.
+- **Maintainability** — modular, documented code.
+
+### Deliverables
+
+- A public GitHub repository with the project code.
+- A hosted version on GitHub Pages.
