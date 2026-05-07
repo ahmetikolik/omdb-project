@@ -3,61 +3,65 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OMDB Movie Search</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="description" content="Search movies, series and episodes via the OMDB API." />
+  <title>Movie Finder · OMDB</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🍿%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <header class="site-header">
-    <h1>🎬 Movie Search</h1>
-    <p class="subtitle">Search any movie using the OMDB API</p>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🍿</span>
+      <span class="brand-name">Movie Finder</span>
+    </div>
+    <span class="brand-tag">powered by OMDB</span>
   </header>
 
-  <main class="container">
-    <!-- API key setup (first run) -->
-    <section id="api-key-section" class="api-key-section hidden">
-      <p>Please enter your free OMDB API key (get one at <a href="https://www.omdbapi.com/apikey.aspx" target="_blank" rel="noopener">omdbapi.com</a>):</p>
-      <div class="api-key-row">
-        <input type="text" id="api-key-input" placeholder="Your OMDB API key" />
-        <button id="save-key-btn">Save</button>
-      </div>
-    </section>
-
+  <main class="page">
     <!-- Search bar -->
-    <section class="search-section">
+    <section class="search-card">
       <div class="search-row">
-        <input type="text" id="search-input" placeholder="Type a movie name..." autocomplete="off" />
-        <button id="search-btn">Search</button>
+        <input type="text" id="query" placeholder="Search a movie, series, or episode…" autocomplete="off" />
+        <button id="searchBtn" type="button">Search</button>
       </div>
-      <div class="filter-row">
-        <select id="type-filter">
-          <option value="">All types</option>
-          <option value="movie">Movie</option>
-          <option value="series">Series</option>
-          <option value="episode">Episode</option>
-        </select>
-        <input type="number" id="year-filter" placeholder="Year (optional)" min="1900" max="2100" />
+      <div class="filters">
+        <label>
+          <span>Type</span>
+          <select id="typeFilter">
+            <option value="">Any</option>
+            <option value="movie">Movie</option>
+            <option value="series">Series</option>
+            <option value="episode">Episode</option>
+          </select>
+        </label>
+        <label>
+          <span>Year</span>
+          <input type="number" id="yearFilter" placeholder="e.g. 2010" min="1900" max="2100" />
+        </label>
+        <button id="clearBtn" type="button" class="ghost">Clear</button>
       </div>
     </section>
 
-    <!-- Status / error messages -->
-    <p id="status-message" class="status-message"></p>
+    <p id="status" class="status"></p>
 
-    <!-- Results grid -->
-    <section id="results" class="results-grid"></section>
+    <section id="grid" class="grid"></section>
 
-    <!-- Detail modal -->
-    <div id="modal" class="modal hidden">
-      <div class="modal-content">
-        <button id="modal-close" class="modal-close">×</button>
-        <div id="modal-body"></div>
+    <!-- Detail dialog -->
+    <div id="dialog" class="dialog hidden" role="dialog" aria-modal="true">
+      <div class="dialog-card">
+        <button id="dialogClose" class="dialog-close" aria-label="Close">×</button>
+        <div id="dialogBody"></div>
       </div>
     </div>
   </main>
 
-  <footer class="site-footer">
-    <p>Built by Ahmet Yıldırım · Data from <a href="https://www.omdbapi.com/" target="_blank" rel="noopener">OMDB API</a></p>
+  <footer class="footer">
+    <p>Built by <a href="https://github.com/ahmetikolik" target="_blank" rel="noopener">Ahmet Yıldırım</a> ·
+       data from <a href="https://www.omdbapi.com/" target="_blank" rel="noopener">OMDB</a></p>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- Modules: api wraps OMDB calls; app handles UI + storage -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

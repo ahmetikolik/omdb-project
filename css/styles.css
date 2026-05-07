@@ -1,0 +1,370 @@
+/* ==========================================================================
+   Movie Finder — styles
+   Author: Ahmet Yıldırım
+   Theme: deep navy + warm amber accent (different from the typical blue)
+   ========================================================================== */
+
+:root {
+  --bg:           #11131c;
+  --surface:      #1a1d2b;
+  --surface-2:    #232739;
+  --border:       #2c3045;
+  --text:         #ebecf2;
+  --text-soft:    #9aa1b1;
+  --accent:       #f6b352;   /* amber */
+  --accent-soft:  #ffd28a;
+  --danger:       #ef6b6b;
+  --radius:       10px;
+  --radius-lg:    14px;
+  --shadow:       0 6px 24px rgba(0, 0, 0, 0.35);
+  --maxw:         1180px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+               Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-soft); }
+
+/* --------------------------------------------------------------------------
+   Top bar
+   -------------------------------------------------------------------------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #161929 0%, #11131c 100%);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.2px;
+}
+
+.brand-mark { font-size: 1.4rem; }
+.brand-tag {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+/* --------------------------------------------------------------------------
+   Page wrapper
+   -------------------------------------------------------------------------- */
+.page {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+  flex: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Search card
+   -------------------------------------------------------------------------- */
+.search-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+}
+
+.search-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.search-row input {
+  flex: 1;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  flex: 1;
+  min-width: 140px;
+}
+
+input,
+select {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input::placeholder {
+  color: var(--text-soft);
+}
+
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(246, 179, 82, 0.15);
+}
+
+button {
+  padding: 12px 22px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #1b1402;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.05s, background 0.15s;
+}
+
+button:hover { background: var(--accent-soft); }
+button:active { transform: translateY(1px); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.ghost {
+  background: transparent;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+}
+button.ghost:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   Status line
+   -------------------------------------------------------------------------- */
+.status {
+  text-align: center;
+  color: var(--text-soft);
+  margin: 18px 0;
+  min-height: 1.2rem;
+  font-size: 0.95rem;
+}
+.status-error { color: var(--danger); }
+
+/* --------------------------------------------------------------------------
+   Results grid
+   -------------------------------------------------------------------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover,
+.card:focus {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+
+.poster {
+  aspect-ratio: 2 / 3;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.card-body {
+  padding: 12px 14px;
+}
+
+.card-title {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  /* clamp to 2 lines to keep card heights aligned */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
+}
+
+.card-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  text-transform: capitalize;
+}
+
+/* --------------------------------------------------------------------------
+   Detail dialog
+   -------------------------------------------------------------------------- */
+.dialog {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+  animation: fade-in 0.15s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.dialog-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  max-width: 760px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: 26px;
+  box-shadow: var(--shadow);
+}
+
+.dialog-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 1.6rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 24px;
+}
+
+.detail img {
+  width: 100%;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.detail-info h2 {
+  margin: 0 0 6px;
+  font-size: 1.55rem;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 8px;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  margin: 0 0 14px;
+  flex-wrap: wrap;
+}
+
+.detail-fields {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 6px 14px;
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+}
+.detail-fields dt {
+  color: var(--text-soft);
+  font-weight: 500;
+}
+.detail-fields dd {
+  margin: 0;
+}
+
+.detail-plot {
+  margin: 0;
+  line-height: 1.55;
+  color: #d6d8e0;
+  font-size: 0.95rem;
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.footer {
+  padding: 18px;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+/* --------------------------------------------------------------------------
+   Helpers
+   -------------------------------------------------------------------------- */
+.hidden { display: none !important; }
+
+/* --------------------------------------------------------------------------
+   Mobile
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .topbar { padding: 14px 16px; }
+  .brand-tag { display: none; }
+  .search-row { flex-direction: column; }
+  .detail { grid-template-columns: 1fr; }
+  .detail img { max-width: 220px; margin: 0 auto; display: block; }
+  .detail-fields { grid-template-columns: 70px 1fr; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}

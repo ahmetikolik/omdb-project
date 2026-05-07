@@ -1,92 +1,120 @@
-# OMDB Movie Search Project
+# 🍿 Movie Finder — OMDB SPA
 
 > **Submission by Ahmet Yıldırım** — Yıldız Technical University, Computer Engineering
 > i2i Systems Summer Internship 2026 application.
 
-A single page application (SPA) that searches movies, series and episodes through the [OMDB API](https://www.omdbapi.com/).
-Built with plain HTML, CSS and JavaScript — no frameworks, no build step.
+A single-page web app that searches the [OMDB API](https://www.omdbapi.com/) and
+displays movie details in a clean, responsive interface. Built with vanilla
+HTML / CSS / JavaScript — no frameworks, no bundler, no build step.
 
-## 🔗 Live Demo
+## 🔗 Live demo
 
-Once deployed, the app will be live at:
 **`https://ahmetikolik.github.io/omdb-project/`**
+
+(Hosted on GitHub Pages, deployed automatically from `main`.)
 
 ## ✨ Features
 
-- 🔎 Search any movie/series by title
-- 🎯 Filter by **type** (movie / series / episode) and **year**
-- 🎞️ Movie cards show poster, title and year
-- 📋 Click a card to see full details — genre, director, writer, actors, IMDB rating, plot
-- ⚠️ Clear error messages for "not found" and network errors
-- ♻️ Multiple searches without refreshing
-- 💾 Last search and your API key are saved to `localStorage`, so refreshing keeps your view
-- 📱 Fully responsive — works on phone, tablet, desktop
-- ⚡ Detail responses are cached in memory to avoid duplicate API calls
+| | |
+| --- | --- |
+| 🔎 Title search with real-time error feedback | ✅ |
+| 🎯 Filter by **type** (movie / series / episode) | ✅ |
+| 📅 Filter by **release year** | ✅ |
+| 🎴 Card grid with poster, title, year, type | ✅ |
+| 🪟 Detail dialog: genre, director, writer, cast, IMDB rating, full plot | ✅ |
+| ⚠️ Friendly error messages (network, not-found, HTTP errors) | ✅ |
+| ♻️ Multiple searches with no page refresh | ✅ |
+| 💾 Last search persists in `localStorage` (auto-restored on refresh) | ✅ |
+| ⚡ Detail responses cached in memory (no duplicate API calls) | ✅ |
+| 📱 Fully responsive (mobile, tablet, desktop) | ✅ |
+| ⌨️ Keyboard accessible (Enter to open card, Esc to close dialog) | ✅ |
 
-## 🛠️ How to Run Locally
-
-1. Clone this repo:
-   ```bash
-   git clone https://github.com/ahmetikolik/omdb-project.git
-   cd omdb-project
-   ```
-
-2. Get a free OMDB API key from [omdbapi.com/apikey.aspx](https://www.omdbapi.com/apikey.aspx).
-
-3. Open `index.html` in your browser. Any of these works:
-   - Double click `index.html`
-   - Or use a quick local server: `python -m http.server 8000` and open `http://localhost:8000`
-
-4. The app will ask for your API key on first load. Paste it in — it's stored only in your browser's localStorage.
-
-## 🚀 Deploy to GitHub Pages
-
-In the repository on GitHub:
-1. Settings → Pages
-2. Source: `Deploy from a branch`
-3. Branch: `main` / Folder: `/ (root)` → Save
-4. Wait ~1 minute, then visit `https://ahmetikolik.github.io/omdb-project/`
-
-## 📁 Project Structure
+## 📁 Project layout
 
 ```
 omdb-project/
-├── index.html      # Main page
-├── style.css       # All styling (dark theme, responsive grid)
-├── script.js       # Search, fetch, render, modal, localStorage
+├── index.html          # Page structure
+├── css/
+│   └── styles.css      # Theme + layout (deep navy + amber accent)
+├── js/
+│   ├── api.js          # OMDB endpoint wrapper (search, getById)
+│   └── app.js          # UI logic, event handlers, dialog, localStorage
+├── assets/             # (kept for future images / icons)
 └── README.md
 ```
 
-## 🧠 Notes & Decisions
+I split the JavaScript into two files on purpose:
+- **`api.js`** owns network details: building URLs, calling `fetch`, throwing
+  clean errors. The rest of the code never touches `fetch` directly.
+- **`app.js`** owns UI: DOM refs, rendering, event handlers, the dialog, and
+  localStorage. It calls `OMDB.search()` / `OMDB.getById()` like a small SDK.
 
-- **No build tools** — just open `index.html`. The brief said HTML/CSS/JS, so I kept it framework-free.
-- **API key in localStorage** — instead of hardcoding it (which would leak it on GitHub Pages), the user enters their own key once and it stays in their browser. Safer and reusable.
-- **Two-step UX** — search returns lightweight cards; full details only fetched when the user clicks a card. This keeps the initial render fast and saves API calls.
-- **Detail cache** — clicking the same movie twice doesn't re-hit the API; results are cached in memory for the session.
-- **Persistence on refresh** — the last search query, type filter and year filter are saved in `localStorage` and re-run when the page loads.
+That separation is overkill for ~250 lines of code, but it makes future changes
+(e.g. adding a backend proxy or swapping the API) much easier.
+
+## 🛠️ Run locally
+
+```bash
+git clone https://github.com/ahmetikolik/omdb-project.git
+cd omdb-project
+# any of these works:
+python -m http.server 8000      # then open http://localhost:8000
+# or just double-click index.html
+```
+
+The OMDB API key is already wired in (`13b65e04`), so the app works out of the
+box. No `.env`, no setup.
+
+## 🚀 Deploy to GitHub Pages
+
+In the GitHub repo:
+1. **Settings → Pages**
+2. Source: `Deploy from a branch`
+3. Branch: `main`, folder: `/ (root)`
+4. Save → wait ~1 min → visit the live URL.
+
+## 🧠 Decisions worth calling out
+
+- **Two-step UX** — the search endpoint returns lightweight summaries (title,
+  year, poster). Genre / director / plot only come from the detail endpoint, so
+  I fetch those *only* when the user clicks a card. Keeps the initial search
+  fast and saves API quota.
+- **In-memory detail cache** — clicking the same card twice doesn't re-hit OMDB.
+  A `Map` keyed by `imdbID` short-circuits the second fetch.
+- **Persistence on refresh** — the last query and filter values are stored in
+  `localStorage` and the search is automatically re-run when the page loads.
+- **Poster fallback** — OMDB sometimes returns `"N/A"` instead of an image URL.
+  The app substitutes a placeholder generated from the movie title so the grid
+  never has broken-image holes.
+- **HTML escape on user-controlled strings** — movie titles and plots are
+  rendered through a small `escape()` helper before reaching `innerHTML`.
+  Stops broken rendering and trivial XSS via crafted titles.
+- **Keyboard accessible** — cards are focusable; Enter / Space opens them;
+  Escape closes the dialog. Click-outside-to-close also works.
 
 ---
 
-## Original Project Brief (from i2i Systems)
+## Original brief (from i2i Systems)
 
-This project is designed to evaluate coding skills in web development. The application consumes the [OMDB API](http://www.omdbapi.com/) and must be a fully responsive Single Page Application showing movie details (title, year, genre, director, poster).
+A responsive Single Page Application that consumes the OMDB API and displays
+movie details (title, year, genre, director, poster).
 
-### Functional Requirements
+**Functional**
 
-1. **Movie Search Input** — users enter a name and search; bonus points for richer UI (filters).
-2. **Display Movie Details** — at least Title, Year, Genre, Director, Poster.
-3. **Error Handling** — clear messages on errors / not-found.
-4. **Multiple Searches** — work without refresh; persist last search across refreshes.
-5. **Backend Proxy** *(optional)* — handle API requests on a backend.
+1. Movie search input — bonus for richer UI / filters.
+2. Display movie details (title, year, genre, director, poster).
+3. Error handling — clear messages on errors / not found.
+4. Multiple searches without refresh; persist last search across refreshes.
+5. (Optional) Backend proxy for API requests.
 
-### Non-Functional Requirements
+**Non-functional**
 
-- **Performance** — efficient API calls, no needless repeats.
-- **Usability** — simple, intuitive UI.
-- **Portability** — works on modern browsers, responsive across screen sizes.
-- **Maintainability** — modular, documented code.
+- Performance — efficient API usage, no needless repeats.
+- Usability — simple, intuitive UI.
+- Portability — modern browsers, responsive.
+- Maintainability — modular, documented code.
 
-### Deliverables
+**Deliverables**
 
-- A public GitHub repository with the project code.
-- A hosted version on GitHub Pages.
+- Public GitHub repository.
+- Live site on GitHub Pages.
