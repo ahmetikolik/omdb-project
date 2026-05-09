@@ -1,5 +1,5 @@
 // js/app.js
-// UI + state. Talks to the OMDB module via window.OMDB, renders results,
+// UI + state. Talks to OMDB module via window.OMDB, renders results,
 // manages the detail dialog, and persists the last search in localStorage.
 // Author: Ahmet Yıldırım
 
@@ -12,21 +12,25 @@
   const $yearFilter   = document.getElementById("yearFilter");
   const $status       = document.getElementById("status");
   const $grid         = document.getElementById("grid");
+  const $skeleton     = document.getElementById("skeleton");
+  const $welcome      = document.getElementById("welcome");
+  const $empty        = document.getElementById("empty");
   const $dialog       = document.getElementById("dialog");
   const $dialogBody   = document.getElementById("dialogBody");
   const $dialogClose  = document.getElementById("dialogClose");
+  const $chips        = document.querySelectorAll(".chip");
 
-  // --- Local storage keys (namespaced so they don't collide with anything) ---
+  // Local storage key (namespaced so it doesn't collide with anything)
   const LS_KEY = "movieFinder:lastSearch";
 
-  // --- In-memory cache for movie detail responses ---
-  // Saves a fetch when the user re-opens the same card during the session.
+  // In-memory cache for movie detail responses (per-session).
   const detailCache = new Map();
 
   // -------------------------------------------------------------------------
   // Boot
   // -------------------------------------------------------------------------
   document.addEventListener("DOMContentLoaded", () => {
+    buildSkeleton();
     bindEvents();
     restoreLastSearch();
   });
@@ -35,14 +39,23 @@
     $searchBtn.addEventListener("click", handleSearch);
     $clearBtn.addEventListener("click", handleClear);
 
-    // Pressing Enter inside any input triggers the search
     [$query, $yearFilter].forEach(el => {
       el.addEventListener("keydown", e => {
         if (e.key === "Enter") handleSearch();
       });
     });
 
-    // Dialog dismissal: × button, click-outside, Escape key
+    // Suggestion chips: type the chip's query and run a search
+    $chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        $query.value = chip.dataset.q;
+        $typeFilter.value = "";
+        $yearFilter.value = "";
+        handleSearch();
+      });
+    });
+
+    // Dialog dismissal
     $dialogClose.addEventListener("click", closeDialog);
     $dialog.addEventListener("click", e => {
       if (e.target === $dialog) closeDialog();
@@ -50,6 +63,50 @@
     document.addEventListener("keydown", e => {
       if (e.key === "Escape") closeDialog();
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // Skeleton loader (8 placeholder cards)
+  // -------------------------------------------------------------------------
+  function buildSkeleton() {
+    const skelCard = `
+      <div class="skel-card">
+        <div class="skel-poster"></div>
+        <div class="skel-line"></div>
+        <div class="skel-line short"></div>
+      </div>
+    `;
+    $skeleton.innerHTML = skelCard.repeat(8);
+  }
+
+  // -------------------------------------------------------------------------
+  // View state helpers
+  // -------------------------------------------------------------------------
+  function showWelcome() {
+    $welcome.classList.remove("hidden");
+    $empty.classList.add("hidden");
+    $skeleton.classList.add("hidden");
+    $grid.innerHTML = "";
+  }
+
+  function showSkeleton() {
+    $welcome.classList.add("hidden");
+    $empty.classList.add("hidden");
+    $skeleton.classList.remove("hidden");
+    $grid.innerHTML = "";
+  }
+
+  function showResults() {
+    $welcome.classList.add("hidden");
+    $empty.classList.add("hidden");
+    $skeleton.classList.add("hidden");
+  }
+
+  function showEmpty() {
+    $welcome.classList.add("hidden");
+    $skeleton.classList.add("hidden");
+    $grid.innerHTML = "";
+    $empty.classList.remove("hidden");
   }
 
   // -------------------------------------------------------------------------
@@ -68,17 +125,25 @@
     };
 
     persistSearch(query, filters);
-    flash("Searching…");
-    $grid.innerHTML = "";
+    flash("");
+    showSkeleton();
     $searchBtn.disabled = true;
 
     try {
       const data = await OMDB.search(query, filters);
       flash(`Showing ${data.Search.length} of ${data.totalResults} matches.`);
+      showResults();
       renderCards(data.Search);
     } catch (err) {
-      // OMDB module already produced a friendly message
-      flash(err.message, true);
+      // No matches => empty state, real error => error message
+      const msg = (err.message || "").toLowerCase();
+      if (msg.includes("not found") || msg.includes("no results") || msg.includes("too many")) {
+        showEmpty();
+        flash("");
+      } else {
+        showWelcome();
+        flash(err.message, true);
+      }
     } finally {
       $searchBtn.disabled = false;
     }
@@ -88,9 +153,9 @@
     $query.value = "";
     $typeFilter.value = "";
     $yearFilter.value = "";
-    $grid.innerHTML = "";
     flash("");
     localStorage.removeItem(LS_KEY);
+    showWelcome();
   }
 
   // -------------------------------------------------------------------------
@@ -101,6 +166,7 @@
     for (const item of items) {
       fragment.appendChild(buildCard(item));
     }
+    $grid.innerHTML = "";
     $grid.appendChild(fragment);
   }
 
@@ -119,10 +185,13 @@
     const poster = posterOrFallback(item.Poster, item.Title);
 
     card.innerHTML = `
-      <div class="poster"><img src="${poster}" alt="" loading="lazy" /></div>
+      <div class="poster">
+        <span class="card-badge">${escape(item.Type)}</span>
+        <img src="${poster}" alt="" loading="lazy" />
+      </div>
       <div class="card-body">
         <h3 class="card-title">${escape(item.Title)}</h3>
-        <p class="card-meta">${escape(item.Year)} · ${escape(item.Type)}</p>
+        <p class="card-meta">${escape(item.Year)}</p>
       </div>
     `;
     return card;
@@ -147,25 +216,32 @@
 
   function renderDialog(m) {
     const poster = posterOrFallback(m.Poster, m.Title);
+    const hasRating = m.imdbRating && m.imdbRating !== "N/A";
 
     $dialogBody.innerHTML = `
       <div class="detail">
         <img src="${poster}" alt="" />
         <div class="detail-info">
           <h2>${escape(m.Title)}</h2>
-          <p class="detail-meta">
-            <span>${escape(m.Year)}</span>
-            <span>·</span>
-            <span>${escape(m.Rated || "N/A")}</span>
-            <span>·</span>
-            <span>${escape(m.Runtime || "N/A")}</span>
-          </p>
+          <div class="detail-meta">
+            <span class="pill">${escape(m.Year)}</span>
+            <span class="pill">${escape(m.Rated || "N/A")}</span>
+            <span class="pill">${escape(m.Runtime || "N/A")}</span>
+            <span class="pill">${escape(m.Type || "")}</span>
+          </div>
+          ${hasRating ? `
+            <div class="detail-rating">
+              <span class="detail-rating-star">★</span>
+              <span><strong>${escape(m.imdbRating)}</strong>/10 · ${escape(m.imdbVotes || "0")} votes</span>
+            </div>
+          ` : ""}
           <dl class="detail-fields">
             <dt>Genre</dt>     <dd>${escape(m.Genre   || "N/A")}</dd>
             <dt>Director</dt>  <dd>${escape(m.Director|| "N/A")}</dd>
             <dt>Writer</dt>    <dd>${escape(m.Writer  || "N/A")}</dd>
             <dt>Cast</dt>      <dd>${escape(m.Actors  || "N/A")}</dd>
-            <dt>IMDB</dt>      <dd>${escape(m.imdbRating || "N/A")} (${escape(m.imdbVotes || "0")} votes)</dd>
+            ${m.Country ? `<dt>Country</dt><dd>${escape(m.Country)}</dd>` : ""}
+            ${m.Language ? `<dt>Language</dt><dd>${escape(m.Language)}</dd>` : ""}
           </dl>
           <p class="detail-plot">${escape(m.Plot || "")}</p>
         </div>
@@ -196,32 +272,26 @@
       $query.value      = last.query;
       $typeFilter.value = last.type || "";
       $yearFilter.value = last.year || "";
-      // Re-run the search so the user sees the same view they left
       handleSearch();
     } catch {
-      // Corrupted entry — wipe it
       localStorage.removeItem(LS_KEY);
     }
   }
 
   // -------------------------------------------------------------------------
-  // Utility helpers
+  // Helpers
   // -------------------------------------------------------------------------
   function flash(text, isError = false) {
     $status.textContent = text;
     $status.classList.toggle("status-error", !!isError);
   }
 
-  // OMDB sometimes returns "N/A" instead of a real poster URL.
   function posterOrFallback(url, title) {
     if (url && url !== "N/A") return url;
     const t = encodeURIComponent(title || "No Poster");
-    return `https://placehold.co/300x420/1a1d2b/9aa1b1?text=${t}`;
+    return `https://placehold.co/400x600/1f2434/9aa0b3?text=${t}`;
   }
 
-  // Minimal HTML escape — we drop user data into innerHTML in a couple of
-  // places, so this prevents weird rendering and stops trivial injection
-  // attempts from movie titles / plots.
   function escape(s) {
     if (s == null) return "";
     return String(s)
