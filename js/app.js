@@ -1,6 +1,7 @@
 // js/app.js
 // UI + state. Talks to OMDB module via window.OMDB, renders results,
-// manages the detail dialog, and persists the last search in localStorage.
+// manages the detail dialog, the favorites list, and persists everything
+// to localStorage.
 // Author: Ahmet Yıldırım
 
 (function () {
@@ -15,16 +16,26 @@
   const $skeleton     = document.getElementById("skeleton");
   const $welcome      = document.getElementById("welcome");
   const $empty        = document.getElementById("empty");
+  const $noFavorites  = document.getElementById("noFavorites");
   const $dialog       = document.getElementById("dialog");
   const $dialogBody   = document.getElementById("dialogBody");
   const $dialogClose  = document.getElementById("dialogClose");
   const $chips        = document.querySelectorAll(".chip");
+  const $favToggle    = document.getElementById("favoritesToggle");
+  const $favCount     = document.getElementById("favoritesCount");
 
-  // Local storage key (namespaced so it doesn't collide with anything)
-  const LS_KEY = "movieFinder:lastSearch";
+  // Local storage keys (namespaced)
+  const LS_KEY      = "movieFinder:lastSearch";
+  const LS_FAV_KEY  = "movieFinder:favorites";
 
-  // In-memory cache for movie detail responses (per-session).
+  // In-memory cache for movie detail responses (per session)
   const detailCache = new Map();
+
+  // Favorites: { imdbID: { Title, Year, Type, Poster, imdbID } }
+  let favorites = loadFavorites();
+
+  // View mode: "search" (default) or "favorites"
+  let viewMode = "search";
 
   // -------------------------------------------------------------------------
   // Boot
@@ -32,6 +43,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     buildSkeleton();
     bindEvents();
+    refreshFavBadge();
     restoreLastSearch();
   });
 
@@ -45,7 +57,7 @@
       });
     });
 
-    // Suggestion chips: type the chip's query and run a search
+    // Suggestion chips
     $chips.forEach(chip => {
       chip.addEventListener("click", () => {
         $query.value = chip.dataset.q;
@@ -53,6 +65,15 @@
         $yearFilter.value = "";
         handleSearch();
       });
+    });
+
+    // Favorites toggle (top-right button)
+    $favToggle.addEventListener("click", () => {
+      if (viewMode === "favorites") {
+        switchToSearch();
+      } else {
+        switchToFavorites();
+      }
     });
 
     // Dialog dismissal
@@ -66,7 +87,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // Skeleton loader (8 placeholder cards)
+  // Skeleton loader
   // -------------------------------------------------------------------------
   function buildSkeleton() {
     const skelCard = `
@@ -80,11 +101,12 @@
   }
 
   // -------------------------------------------------------------------------
-  // View state helpers
+  // View mode helpers
   // -------------------------------------------------------------------------
   function showWelcome() {
     $welcome.classList.remove("hidden");
     $empty.classList.add("hidden");
+    $noFavorites.classList.add("hidden");
     $skeleton.classList.add("hidden");
     $grid.innerHTML = "";
   }
@@ -92,6 +114,7 @@
   function showSkeleton() {
     $welcome.classList.add("hidden");
     $empty.classList.add("hidden");
+    $noFavorites.classList.add("hidden");
     $skeleton.classList.remove("hidden");
     $grid.innerHTML = "";
   }
@@ -99,20 +122,33 @@
   function showResults() {
     $welcome.classList.add("hidden");
     $empty.classList.add("hidden");
+    $noFavorites.classList.add("hidden");
     $skeleton.classList.add("hidden");
   }
 
   function showEmpty() {
     $welcome.classList.add("hidden");
     $skeleton.classList.add("hidden");
+    $noFavorites.classList.add("hidden");
     $grid.innerHTML = "";
     $empty.classList.remove("hidden");
+  }
+
+  function showNoFavorites() {
+    $welcome.classList.add("hidden");
+    $skeleton.classList.add("hidden");
+    $empty.classList.add("hidden");
+    $grid.innerHTML = "";
+    $noFavorites.classList.remove("hidden");
   }
 
   // -------------------------------------------------------------------------
   // Search flow
   // -------------------------------------------------------------------------
   async function handleSearch() {
+    // If we were in favorites view, switching to a search drops it
+    if (viewMode === "favorites") switchToSearch();
+
     const query = $query.value.trim();
     if (!query) {
       flash("Please type something to search.", true);
@@ -135,7 +171,6 @@
       showResults();
       renderCards(data.Search);
     } catch (err) {
-      // No matches => empty state, real error => error message
       const msg = (err.message || "").toLowerCase();
       if (msg.includes("not found") || msg.includes("no results") || msg.includes("too many")) {
         showEmpty();
@@ -155,7 +190,87 @@
     $yearFilter.value = "";
     flash("");
     localStorage.removeItem(LS_KEY);
-    showWelcome();
+    if (viewMode === "favorites") {
+      renderFavoritesView();
+    } else {
+      showWelcome();
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Favorites
+  // -------------------------------------------------------------------------
+  function loadFavorites() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_FAV_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  }
+
+  function saveFavorites() {
+    localStorage.setItem(LS_FAV_KEY, JSON.stringify(favorites));
+  }
+
+  function isFavorite(imdbID) {
+    return Object.prototype.hasOwnProperty.call(favorites, imdbID);
+  }
+
+  function toggleFavorite(item, btnEl) {
+    if (isFavorite(item.imdbID)) {
+      delete favorites[item.imdbID];
+      btnEl.classList.remove("active");
+      btnEl.textContent = "☆";
+      btnEl.setAttribute("aria-label", "Add to favorites");
+    } else {
+      favorites[item.imdbID] = {
+        imdbID: item.imdbID,
+        Title:  item.Title,
+        Year:   item.Year,
+        Type:   item.Type,
+        Poster: item.Poster
+      };
+      btnEl.classList.add("active");
+      btnEl.textContent = "★";
+      btnEl.setAttribute("aria-label", "Remove from favorites");
+    }
+    saveFavorites();
+    refreshFavBadge();
+
+    // If we're currently in favorites view, re-render to drop the unfavorited card
+    if (viewMode === "favorites") {
+      renderFavoritesView();
+    }
+  }
+
+  function refreshFavBadge() {
+    const count = Object.keys(favorites).length;
+    $favCount.textContent = String(count);
+    $favCount.classList.toggle("hidden", count === 0);
+  }
+
+  function switchToFavorites() {
+    viewMode = "favorites";
+    $favToggle.classList.add("active");
+    flash("");
+    renderFavoritesView();
+  }
+
+  function switchToSearch() {
+    viewMode = "search";
+    $favToggle.classList.remove("active");
+  }
+
+  function renderFavoritesView() {
+    const items = Object.values(favorites);
+    if (items.length === 0) {
+      showNoFavorites();
+      flash("");
+      return;
+    }
+    showResults();
+    flash(`You have ${items.length} favorite${items.length > 1 ? "s" : ""}.`);
+    renderCards(items);
   }
 
   // -------------------------------------------------------------------------
@@ -183,10 +298,15 @@
     });
 
     const poster = posterOrFallback(item.Poster, item.Title);
+    const isFav = isFavorite(item.imdbID);
 
     card.innerHTML = `
       <div class="poster">
-        <span class="card-badge">${escape(item.Type)}</span>
+        <button type="button"
+                class="fav-btn ${isFav ? "active" : ""}"
+                aria-label="${isFav ? "Remove from favorites" : "Add to favorites"}"
+                data-imdb="${escape(item.imdbID)}">${isFav ? "★" : "☆"}</button>
+        <span class="card-badge">${escape(item.Type || "")}</span>
         <img src="${poster}" alt="" loading="lazy" />
       </div>
       <div class="card-body">
@@ -194,6 +314,14 @@
         <p class="card-meta">${escape(item.Year)}</p>
       </div>
     `;
+
+    // Star button: stop propagation so clicking it doesn't open the dialog
+    const favBtn = card.querySelector(".fav-btn");
+    favBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleFavorite(item, favBtn);
+    });
+
     return card;
   }
 
@@ -256,7 +384,7 @@
   }
 
   // -------------------------------------------------------------------------
-  // LocalStorage persistence
+  // LocalStorage persistence (search)
   // -------------------------------------------------------------------------
   function persistSearch(query, filters) {
     const payload = { query, ...filters, ts: Date.now() };
