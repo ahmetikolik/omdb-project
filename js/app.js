@@ -23,6 +23,10 @@
   const $chips        = document.querySelectorAll(".chip");
   const $favToggle    = document.getElementById("favoritesToggle");
   const $favCount     = document.getElementById("favoritesCount");
+  const $loadMoreWrap = document.getElementById("loadMoreWrap");
+  const $loadMoreBtn  = document.getElementById("loadMoreBtn");
+  const $loadMoreLabel= document.getElementById("loadMoreLabel");
+  const $loadMoreCount= document.getElementById("loadMoreCount");
 
   // Local storage keys (namespaced)
   const LS_KEY      = "movieFinder:lastSearch";
@@ -36,6 +40,10 @@
 
   // View mode: "search" (default) or "favorites"
   let viewMode = "search";
+
+  // Pagination state for the current search
+  // OMDB returns up to 10 items per page; totalResults tells us when to stop.
+  let currentSearch = { query: "", filters: {}, page: 1, loaded: 0, total: 0 };
 
   // -------------------------------------------------------------------------
   // Boot
@@ -76,6 +84,9 @@
       }
     });
 
+    // Load more (pagination)
+    $loadMoreBtn.addEventListener("click", handleLoadMore);
+
     // Dialog dismissal
     $dialogClose.addEventListener("click", closeDialog);
     $dialog.addEventListener("click", e => {
@@ -109,6 +120,7 @@
     $noFavorites.classList.add("hidden");
     $skeleton.classList.add("hidden");
     $grid.innerHTML = "";
+    hideLoadMore();
   }
 
   function showSkeleton() {
@@ -117,6 +129,7 @@
     $noFavorites.classList.add("hidden");
     $skeleton.classList.remove("hidden");
     $grid.innerHTML = "";
+    hideLoadMore();
   }
 
   function showResults() {
@@ -132,6 +145,7 @@
     $noFavorites.classList.add("hidden");
     $grid.innerHTML = "";
     $empty.classList.remove("hidden");
+    hideLoadMore();
   }
 
   function showNoFavorites() {
@@ -140,6 +154,7 @@
     $empty.classList.add("hidden");
     $grid.innerHTML = "";
     $noFavorites.classList.remove("hidden");
+    hideLoadMore();
   }
 
   // -------------------------------------------------------------------------
@@ -160,16 +175,24 @@
       year: $yearFilter.value || ""
     };
 
+    // Reset pagination for a fresh search
+    currentSearch = { query, filters, page: 1, loaded: 0, total: 0 };
+
     persistSearch(query, filters);
     flash("");
     showSkeleton();
     $searchBtn.disabled = true;
 
     try {
-      const data = await OMDB.search(query, filters);
-      flash(`Showing ${data.Search.length} of ${data.totalResults} matches.`);
+      const data = await OMDB.search(query, { ...filters, page: 1 });
+      const total = parseInt(data.totalResults, 10) || data.Search.length;
+      currentSearch.loaded = data.Search.length;
+      currentSearch.total  = total;
+
+      flash(`Showing ${data.Search.length} of ${total} matches.`);
       showResults();
       renderCards(data.Search);
+      updateLoadMore();
     } catch (err) {
       const msg = (err.message || "").toLowerCase();
       if (msg.includes("not found") || msg.includes("no results") || msg.includes("too many")) {
@@ -182,6 +205,54 @@
     } finally {
       $searchBtn.disabled = false;
     }
+  }
+
+  // -------------------------------------------------------------------------
+  // Load more (pagination)
+  //
+  // OMDB returns at most 10 items per page. Each click pulls the next page
+  // from the same query/filters and appends those cards to the grid (instead
+  // of replacing them), so the user keeps scrolling through accumulated
+  // results until they hit `total`.
+  // -------------------------------------------------------------------------
+  async function handleLoadMore() {
+    if (viewMode !== "search") return;
+    if (currentSearch.loaded >= currentSearch.total) return;
+
+    const nextPage = currentSearch.page + 1;
+    $loadMoreBtn.disabled = true;
+    $loadMoreLabel.textContent = "Loading…";
+
+    try {
+      const data = await OMDB.search(currentSearch.query, {
+        ...currentSearch.filters,
+        page: nextPage
+      });
+      currentSearch.page    = nextPage;
+      currentSearch.loaded += data.Search.length;
+      appendCards(data.Search);
+      flash(`Showing ${currentSearch.loaded} of ${currentSearch.total} matches.`);
+      updateLoadMore();
+    } catch (err) {
+      flash(err.message, true);
+    } finally {
+      $loadMoreBtn.disabled = false;
+      $loadMoreLabel.textContent = "Load more";
+    }
+  }
+
+  function updateLoadMore() {
+    const remaining = currentSearch.total - currentSearch.loaded;
+    if (remaining > 0 && viewMode === "search") {
+      $loadMoreCount.textContent = `+${Math.min(10, remaining)}`;
+      $loadMoreWrap.classList.remove("hidden");
+    } else {
+      hideLoadMore();
+    }
+  }
+
+  function hideLoadMore() {
+    $loadMoreWrap.classList.add("hidden");
   }
 
   function handleClear() {
@@ -253,12 +324,15 @@
     viewMode = "favorites";
     $favToggle.classList.add("active");
     flash("");
+    hideLoadMore();
     renderFavoritesView();
   }
 
   function switchToSearch() {
     viewMode = "search";
     $favToggle.classList.remove("active");
+    // If a search was active, restore the Load More state for it
+    updateLoadMore();
   }
 
   function renderFavoritesView() {
@@ -282,6 +356,15 @@
       fragment.appendChild(buildCard(item));
     }
     $grid.innerHTML = "";
+    $grid.appendChild(fragment);
+  }
+
+  // Append (don't replace) — used by Load More so previous cards stay visible.
+  function appendCards(items) {
+    const fragment = document.createDocumentFragment();
+    for (const item of items) {
+      fragment.appendChild(buildCard(item));
+    }
     $grid.appendChild(fragment);
   }
 

@@ -37,11 +37,13 @@ const OMDB = (function () {
 
   // ---- Public methods ------------------------------------------------------
 
-  // Search by title. Optional filters: type ("movie"|"series"|"episode"), year.
-  async function search(query, { type, year } = {}) {
+  // Search by title. Optional filters: type ("movie"|"series"|"episode"),
+  // year, and page (1..N — OMDB returns up to 10 results per page).
+  async function search(query, { type, year, page } = {}) {
     const params = { s: query };
     if (type) params.type = type;
     if (year) params.y = year;
+    if (page) params.page = page;
     return call(params);
   }
 

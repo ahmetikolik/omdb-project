@@ -740,6 +740,58 @@ button.ghost:hover {
 }
 
 /* ==========================================================================
+   LOAD MORE
+   ========================================================================== */
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+  animation: fade-up .35s ease-out;
+}
+
+.load-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 28px;
+  height: auto;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  transition: all .2s;
+}
+
+.load-more-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(255, 120, 73, 0.12) 0%, rgba(255, 183, 77, 0.12) 100%);
+  border-color: var(--accent);
+  color: var(--accent-2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--accent-glow);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.load-more-count {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  background: var(--surface-2);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.load-more-btn:hover:not(:disabled) .load-more-count {
+  background: rgba(255, 120, 73, 0.15);
+  color: var(--accent-2);
+}
+
+/* ==========================================================================
    FOOTER
    ========================================================================== */
 .footer {
