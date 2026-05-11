@@ -1,7 +1,6 @@
 # 🍿 Movie Finder — OMDB SPA
 
-> **Submission by Ahmet Yıldırım** — Yıldız Technical University, Computer Engineering
-> i2i Systems Summer Internship 2026 application.
+
 
 A single-page web app that searches the [OMDB API](https://www.omdbapi.com/) and
 displays movie details in a clean, responsive interface. Built with vanilla
