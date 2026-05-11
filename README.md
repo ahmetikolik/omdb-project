@@ -93,7 +93,7 @@ In the GitHub repo:
 
 ---
 
-## Original brief (from i2i Systems)
+## Original brief 
 
 A responsive Single Page Application that consumes the OMDB API and displays
 movie details (title, year, genre, director, poster).
